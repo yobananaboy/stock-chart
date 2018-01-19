@@ -1,0 +1,55 @@
+html, #application {
+  background-color: #ff5252; }
+
+.header {
+  margin-top: 30px; }
+
+.header, .search, .search-results, .stock-chart-container, .stock-symbol-input-container, .footer {
+  padding: 10px;
+  background-color: white; }
+
+.header {
+  border-top-left-radius: .25em;
+  border-top-right-radius: .25em; }
+
+.footer {
+  border-bottom-left-radius: .25em;
+  border-bottom-right-radius: .25em; }
+
+.profile-img {
+  max-width: 25px; }
+
+.footer {
+  margin-bottom: 30px; }
+
+img {
+  border-radius: .25rem; }
+
+.profile-img {
+  border-radius: 50%;
+  margin-right: 5px; }
+
+.search {
+  margin-bottom: 10px; }
+
+.card {
+  margin-bottom: 20px; }
+
+.loader {
+  border: 16px solid white;
+  border-top: 16px solid #ff5252;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  margin: auto;
+  animation: spin 1.5s linear infinite;
+  color: transparent; }
+
+.loader:after {
+  content: ''; }
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg); }
+  100% {
+    transform: rotate(360deg); } }
