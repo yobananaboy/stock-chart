@@ -1,3 +1,19 @@
+import _ from 'underscore';
+
+const insertStock = (array, stock) => {
+    let newArray = array.slice();
+    newArray.push(stock);
+    return newArray;
+}
+
+const deleteStock = (array, stock) => {
+    let stockName = stock.symbol;
+    let filteredArray = array.filter(s => {
+        s.symbol !== stockName;
+    });
+    return filteredArray;
+}
+
 export const stocksHaveErrored = (state = false, action) => {
     switch(action.type) {
         case 'STOCKS_HAVE_ERRORED':
@@ -20,8 +36,14 @@ export const stocksAreLoading = (state = false, action) => {
 
 export const stocks = (state = [], action) => {
     switch(action.type) {
-        case 'STOCKS_UPDATED':
-            return action.stocksData;
+        case 'ALL_STOCKS_UPDATED':
+            return action.stocks;
+            
+        case 'NEW_STOCK_ADDED':
+            return insertStock(state, action.stock);
+            
+        case 'STOCK_DELETED':
+            return deleteStock(state, action.stock);
             
         default:
             return state;

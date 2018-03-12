@@ -13,7 +13,7 @@ const bodyParser = require('body-parser');
 const database = require('./config/database');
 const async = require('async');
 const _ = require('underscore');
-const rp = require('request-promise');
+const axios = require('axios');
 
 const stockAPIKey = process.env.ALPHAVANTAGE_KEY;
 
@@ -26,7 +26,7 @@ app.use(bodyParser.json());
 app.set('views', './views');
 app.set('view engine', 'ejs');
 
-require('./routes')(app, database, async, _, rp, stockAPIKey, io);
+require('./routes')(app, database, async, _, axios, stockAPIKey, io);
 
 server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function(){
   var addr = server.address();

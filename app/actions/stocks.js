@@ -1,15 +1,9 @@
-// actions
-
 // connect function for when server side websocket connected with client
 export const socketConnect = (socket) => {
     return (dispatch) => {
         // on connect emit stock request
-        socket.on('connect', () => {
-          dispatch(stocksAreLoading(true));
-          socket.emit('stock-request');
-        });
-        
-
+        dispatch(stocksAreLoading(true));
+        socket.emit('stock-request');
     };
 };
 
@@ -20,16 +14,37 @@ export const newStockDataReceived = (data) => {
         if(data.err === 'errorLoadingStocks') {
             dispatch(stocksHaveErrored(true, JSON.parse(data.err)));
         } else {
-            dispatch(stocksUpdated(JSON.parse(data.stocksData)));
+            dispatch(allStocksUpdated(JSON.parse(data.stocksData)));
         }
     };
 };
 
+export const addStock = (socket, stock) => {
+    socket.emit('add-stock', {stock});
+};
 
-export const stocksUpdated = (stocksData) => {
+export const stockAdded = (stock) => {
     return {
-        type: 'STOCKS_UPDATED',
-        stocksData
+        type: 'NEW_STOCK_ADDED',
+        stock
+    };
+};
+
+export const delteStock = (socket, stock) => {
+    socket.emit('delete-stock', {stock});
+};
+
+export const stockDeleted = (name) => {
+    return {
+        type: 'STOCK_DELETED',
+        name
+    };
+};
+
+export const allStocksUpdated = (stocks) => {
+    return {
+        type: 'ALL_STOCKS_UPDATED',
+        stocks
     };
 };
 

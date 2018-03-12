@@ -1,23 +1,25 @@
-const mongoose = require('mongoose');
+let mongoose = require('mongoose');
+mongoose.Promise = require('bluebird');
+
 require('dotenv').config();
 
-const user = process.env.USERNAME;
-const password = process.env.PASSWORD;
-const host = process.env.HOST;
-const port = process.env.DB_PORT;
+let user = process.env.USERNAME;
+let password = process.env.PASSWORD;
+let host = process.env.HOST;
+let port = process.env.DB_PORT;
 
-
-const uri = `mongodb://${user}:${password}@${host}:${port}/stocks`;
+let uri = `mongodb://${user}:${password}@${host}:${port}/stocks`;
 mongoose.connect(uri, {useMongoClient: true});
 
-const Schema = mongoose.Schema;
+let Schema = mongoose.Schema;
 // create user schema in user collection
-const stocksSchema = new Schema({
+let stocksSchema = new Schema({
    _id: String,
-   stocksToSearch: []
+   lastRefresh: Date,
+   stocks: []
 }, {collection: 'stocks-to-search'});
 
-const Stocks = mongoose.model('Stocks', stocksSchema);
+let Stocks = mongoose.model('Stocks', stocksSchema);
 
 // export
 module.exports = {

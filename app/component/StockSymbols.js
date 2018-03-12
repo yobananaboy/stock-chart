@@ -3,7 +3,6 @@ import emoji from 'react-easy-emoji'
 import { getColor } from '../colors';
 
 export const StockSymbols = (props) => {
-    console.log(props);
     let stocks = props.stocks.map((stock, index) => {
         let color = getColor(index);
         return (

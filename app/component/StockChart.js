@@ -3,6 +3,9 @@ import ReactHighstock from 'react-highcharts/ReactHighstock.src';
 import { colors } from '../colors';
 
 export const StockChart = (props) => {
+  if (props.stocks.length === 0) {
+    return <p>No data to load!</p>;
+  }
   
   const config = {
       rangeSelector: {
@@ -20,8 +23,6 @@ export const StockChart = (props) => {
       },
       series: props.stocks
     };
-    console.log(config);
-    console.log(props);
   return(
         <ReactHighstock config={config} />
       );

@@ -6,15 +6,21 @@ import { connect } from 'react-redux';
 import { socketConnect, newStockDataReceived, updateSearchIsLoading } from '../actions/stocks';
 import io from 'socket.io-client';
 
-const socket = io.connect("https://matts-stock-chart.herokuapp.com/");
+const socket = io("https://stock-chart-server-render-mattkeegan20.c9users.io//");
+// const socket = io.connect("https://matts-stock-chart.herokuapp.com/");
+
 
 class App extends Component {
     constructor(props) {
         super(props);
+        
+        //this.props.socketConnect(socket);
+
         // whenever stock data is emitted, update stocks if there hasn't been an error
         socket.on('stock-data', data => {
             this.props.newStockDataReceived(data);
         });
+
     }
     
     componentDidMount() {
