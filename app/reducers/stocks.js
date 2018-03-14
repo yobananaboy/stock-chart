@@ -5,10 +5,9 @@ const insertStock = (array, stock) => {
 };
 
 const deleteStock = (array, stock) => {
-    let filteredArray = array.filter(s => {
-        s.symbol !== stock;
+    return array.filter(s => {
+        return s.symbol != stock;
     });
-    return filteredArray;
 };
 
 export const stocksAreLoading = (state = false, action) => {

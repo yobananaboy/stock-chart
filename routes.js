@@ -115,6 +115,7 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                     let url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stockSymbol}&apikey=${stockAPIKey}`;
                     axios.get(url, { timeout: 3000 })
                         .then(stock => {
+                            // catch error message
                             stock = stock.data;
                             let symbol = stock["Meta Data"]["2. Symbol"];
                             let timeSeries = stock['Time Series (Daily)'];
