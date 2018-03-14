@@ -79,11 +79,10 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                                 return stockForDb;
 
                             }
+                            
                             // else data must be from database, so just return it
-                            else {
 
-                                return stock;
-                            }
+                            return stock;
                         });
                         // emit to user
                         socket.emit('action', { type: 'ALL_STOCKS_DATA', stocks: stocks });
@@ -115,7 +114,12 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                     let url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stockSymbol}&apikey=${stockAPIKey}`;
                     axios.get(url, { timeout: 3000 })
                         .then(stock => {
-                            // catch error message
+                            // if error message returned, then incorrect stock entered, so return error message
+                            if('Error Message' in stock.data) {
+                                socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: false });
+                                socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: 'Stock symbol could not be found. Please check that stock symbol exists and try again.' });
+                                return false;
+                            }
                             stock = stock.data;
                             let symbol = stock["Meta Data"]["2. Symbol"];
                             let timeSeries = stock['Time Series (Daily)'];
@@ -155,10 +159,11 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                         .catch(err => {
                             console.log(err);
                             socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: false });
-                            socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: 'Search has errored. Please double check that the stock symbol exists and try again.' });
+                            socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: 'There was an error loading the symbol data. Please check your connection and try again.' });
                         });
                     
                 } else {
+                    socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: false });
                     socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: 'This stock has already been added.' });
                 }
             })
@@ -208,6 +213,7 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
     
     app.get('*', (req, res) => {
        let data = store.getState();
+       store.dispatch(stocksAreLoading(true));
        const content = renderToString(
           <Provider store={store}>
             <App />

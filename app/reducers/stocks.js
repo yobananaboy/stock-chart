@@ -10,7 +10,7 @@ const deleteStock = (array, stock) => {
     });
 };
 
-export const stocksAreLoading = (state = false, action) => {
+export const stocksAreLoading = (state = true, action) => {
     switch(action.type) {
         case 'STOCKS_ARE_LOADING':
             return action.loading;
