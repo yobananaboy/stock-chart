@@ -167,17 +167,17 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
     
     const deleteStock = (stockToDelete, socket) => {
         socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: true });
-        Stocks.remove({_id: stockToDelete}).exec()
+        Stocks.findByIdAndRemove(stockToDelete).exec()
             .then(stock => {
                 socket.emit('action', { type: 'STOCK_DELETED', stock: stockToDelete });
                 socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: false });
                 socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: false });
                 
-                socket.broadcast.emit('action', { type: 'STOCK_DELETED', stock: stockToDelete });
-                
+                socket.broadcast.emit('action', { type: 'STOCK_DELETED', stock: stockToDelete });                        
             })
             .catch(err => {
                 console.log(err);
+                socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: false });
                 socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: 'There was an error deleting the stock. Please try again' });
             });
     };
@@ -202,17 +202,6 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
             
         });
         
-        
-        /*
-        // when client makes request for stocks, send stock data from API
-        socket.on('STOCK-REQUEST', (socket) => getAllStocksData(socket));
-        
-        // when client adds new stock symbol to be displayed
-        socket.on('NEW-STOCK-SYMBOL', (stock, socket) => addOneStock(stock, socket));
-        
-        socket.on('DELETE-STOCK-SYMBOL', (stock, socket) => deleteStock(stock, socket));
-        */
-        // when client disconnects
         socket.on('disconnect', () => {});
     });
     

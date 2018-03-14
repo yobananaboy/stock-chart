@@ -42,7 +42,7 @@ class StockSymbols extends Component  {
     
     deleteStock(e) {
         e.preventDefault();
-        this.props.deleteStock('delete-stock-symbol', {index: +e.target.id});
+        this.props.deleteStock(e.target.id);
     }
 
     render () {
