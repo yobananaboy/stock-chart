@@ -15,36 +15,77 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
 
     const Stocks = database.Stocks;
     
+    const getDateWithoutTime = (date) => {
+        return new Date(date.setHours(0, 0, 0, 0));
+    };
+    
+    const addStockToDb = (stock) => {
+
+        let symbol = stock["Meta Data"]["2. Symbol"];
+        let timeSeries = stock['Time Series (Daily)'];
+        let lastRefresh = stock["Meta Data"]["3. Last Refreshed"];
+        let seriesData = [];
+                        
+        Object.keys(timeSeries).forEach(key => {
+            // parse date, which will be the key
+            let date = Date.parse(new Date(key));
+            // get closing price of stock
+            let close = +timeSeries[key]["4. close"];
+            // push array to stock data at its index
+            seriesData.push([date, close]);
+        });
+        
+        let stockForDb = {
+            _id: symbol,
+            symbol,
+            lastRefresh,
+            data: seriesData.reverse(),
+            tooltip: {
+                valueDecimals: 2
+            }
+        };
+        // upsert stock on database to create new or update existing
+        Stocks.update({_id: symbol}, stockForDb, { upsert: true }).exec()
+            .catch(err => console.log(err));
+        
+        return stockForDb;
+    };
+    
     const getAllStocksData = (socket, broadcast = false) => {
-        console.log('getting all stocks');
-        // search database for latest stock symbols searched
-        Stocks.find({})
-            .then(data => {
-                console.log(data);
-                // now have array of stock data from database
+        
+            // search database for latest stock symbols searched
+            Stocks.find({}).then(data => {
+                
+                // create empty array to hold promises
+                let stockPromises = [];
                 
                 // get todays date, clearing the hours
-                let todaysDate = new Date();
-                todaysDate = todaysDate.setHours(0, 0, 0, 0);
-                // check to see if data is up to date - if the data was not last refreshed today then need to update data
-                if(todaysDate !== data.lastRefresh) {
-                    let stockPromises = [];
-                    data.stocks.forEach((stock, index) => {
+                let todaysDate = getDateWithoutTime(new Date());
+                
+                stockPromises = data.map(stock => {
+                    // if stock was not last refreshed today, push promise to array of promises
+                    if (todaysDate != stock.lastRefresh) {
                         let stockSymbol = stock.symbol;
                         let url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stockSymbol}&apikey=${stockAPIKey}`;
-                        stockPromises.push(axios.get(url));
-                    });
-                    // get all stock data with promise all
-                    Promise.all(stockPromises)
-                        .then(stockData => {
-                            let stocks = [];
-                            stockData.forEach(stock => {
-                                // get symbol
+                        return axios.get(url, { timeout: 3000 });
+                    }
+                    // else data is up to date - push data to array of promises to be resolved immediately
+                    else {
+                        return stock;
+                    }
+                });
+                Promise.all(stockPromises)
+                    .then(stockData => {
+                        let stocks = stockData.map(stock => {
+                            
+                            // if we get meta data from alpha vantage then this is new data we need to coerce and then save to db
+                            if ("Meta Data" in stock.data) {
+                                stock = stock.data;
                                 let symbol = stock["Meta Data"]["2. Symbol"];
-                                // loop through the time series, pulling date and closing price. Format date for highstock
                                 let timeSeries = stock['Time Series (Daily)'];
-                                
+                                let lastRefresh = stock["Meta Data"]["3. Last Refreshed"];
                                 let seriesData = [];
+                        
                                 Object.keys(timeSeries).forEach(key => {
                                     // parse date, which will be the key
                                     let date = Date.parse(new Date(key));
@@ -53,49 +94,45 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                                     // push array to stock data at its index
                                     seriesData.push([date, close]);
                                 });
-                                let newStock = new Stocks({
+                                
+                                let stockForDb = {
+                                    _id: symbol,
                                     symbol,
-                                    data: seriesData,
+                                    lastRefresh,
+                                    data: seriesData.reverse(),
                                     tooltip: {
                                         valueDecimals: 2
-                                    }  
-                                });
-                                // push new stock to stocks object for emitting to users
-                                stocks.push(newStock);
-                            });
-                            // emit to user
-                            socket.emit('stocks-data', {stocks});
-                            // and broadcast if true
-                            broadcast ? socket.broadcast.emit('stocks-data', {stocks}) : void(0);
-                            // save new array of stock data to db
-                            data.stocks = stocks;
-                            data.lastRefresh = todaysDate;
-                            data.save()
-                                .catch(err => {
-                                    console.log(err);
-                                });
-                        })
-                        .catch(err => {
-                            console.log(err);
+                                    }
+                                };
+                                // upsert stock on database to create new or update existing
+                                Stocks.update({_id: symbol}, stockForDb, { upsert: true }).exec()
+                                    .catch(err => console.log(err));
+                                
+                                return stockForDb;
+
+                            }
+                            // else data must be from database, so just return it
+                            else {
+
+                                return stock;
+                            }
                         });
-                    
-                } else {
-                    socket.emit('stock-data', {stocks: data.stocks});
-                }
-                
-                
+                        // emit to user
+                        socket.emit('action', { type: 'ALL_STOCKS_DATA', stocks: stocks });
+                        // and broadcast if true
+                        broadcast ? socket.broadcast.emit('action', { type: 'ALL_STOCKS_DATA', stocks: stocks }) : void(0);
+                    }).catch(err => console.log(err));
             })
             .catch(err => {
                 console.log(err);
-                // send error message
             });
     };
     
-    const addOneStock = (stockToAdd, socket) => {
+    const addStock = (stockToAdd, socket) => {
         // search database for stock first, to see if it exists
         Stocks.find({})
             .then(stocks => {
-                let search = _.findIndex(stocks, (stock) => {
+                let search = _.findIndex(stocks, stock => {
                     return stock.symbol == stockToAdd;
                 });
                 // if search equal to minus one, stock not already in db
@@ -104,34 +141,12 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                     let url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stockSymbol}&apikey=${stockAPIKey}`;
                     axios.get(url)
                         .then(stock => {
-                                let symbol = stock["Meta Data"]["2. Symbol"];
-                                // loop through the time series, pulling date and closing price. Format date for highstock
-                                let timeSeries = stock['Time Series (Daily)'];
-                                
-                                let seriesData = [];
-                                Object.keys(timeSeries).forEach(key => {
-                                    // parse date, which will be the key
-                                    let date = Date.parse(new Date(key));
-                                    // get closing price of stock
-                                    let close = +timeSeries[key]["4. close"];
-                                    // push array to stock data at its index
-                                    seriesData.push([date, close]);
-                                });
-                                
-                                let newStock = new Stocks({
-                                    symbol,
-                                    data: seriesData,
-                                    tooltip: {
-                                        valueDecimals: 2
-                                    }
-                                });
-                                // emit new stock data to all users
-                                socket.emit('stock-data', {stocks});
-                                // then save stock to database
-                                newStock.save()
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
+                            let stockAdded = addStockToDb(stock.data);
+                            
+                            // emit new stock data to all users
+                            socket.emit('action', { type: 'NEW_STOCK_ADDED', stock: stockAdded });
+                            socket.broadcast.emit('action', { type: 'NEW_STOCK_ADDED', stock: stockAdded });
+          
                         })
                         .catch(err => {
                             console.log(err);
@@ -151,32 +166,40 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
     };
     
     const deleteStock = (stockToDelete, socket) => {
-        Stocks.find({})
-            .then(stocks => {
-                // filter stocks array to remove the stock to delete
-                stocks.data = stocks.data.filter((s => {
-                    return s.symbol === stockToDelete;
-                }));
-                stocks.save()
-                    .catch(err => {
-                        console.log(err);
-                    });
-            })
-            .catch(err => {
-                console.log(err);
-            });
+        Stocks.remove({_id: stockToDelete}).exec()
+            .catch(err => console.log(err));
     };
 
     io.on('connection', (socket) => {
         console.log('connected');
+        socket.on('action', (action) => {
+            switch(action.type) {
+                case 'server/get-stocks':
+                    getAllStocksData(socket);
+                    break;
+                    
+                case 'server/add-stock':
+                    addStock(action.stockToAdd, socket);
+                    break;
+                    
+                case 'server/delete-stock':
+                    deleteStock(action.stockToDelete, socket);
+                    break;
+                    
+            }
+            
+        });
+        
+        
+        /*
         // when client makes request for stocks, send stock data from API
-        socket.on('stock-request', (socket) => getAllStocksData(socket));
+        socket.on('STOCK-REQUEST', (socket) => getAllStocksData(socket));
         
         // when client adds new stock symbol to be displayed
-        socket.on('new-stock-symbol', (stock, socket) => addOneStock(stock, socket));
+        socket.on('NEW-STOCK-SYMBOL', (stock, socket) => addOneStock(stock, socket));
         
-        socket.on('delete-stock-symbol', (stock, socket) => deleteStock(stock, socket));
-        
+        socket.on('DELETE-STOCK-SYMBOL', (stock, socket) => deleteStock(stock, socket));
+        */
         // when client disconnects
         socket.on('disconnect', () => {});
     });

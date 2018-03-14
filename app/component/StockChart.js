@@ -21,7 +21,13 @@ export const StockChart = (props) => {
       title: {
         text: 'Stocks'
       },
-      series: props.stocks
+      series: props.stocks.map(stock => {
+        return {
+          name: stock.symbol,
+          data: stock.data,
+          tooltip: stock.tooltip
+        };
+      })
     };
   return(
         <ReactHighstock config={config} />

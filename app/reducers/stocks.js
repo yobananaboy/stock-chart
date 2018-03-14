@@ -16,7 +16,7 @@ const deleteStock = (array, stock) => {
 
 export const stocksHaveErrored = (state = false, action) => {
     switch(action.type) {
-        case 'STOCKS_HAVE_ERRORED':
+        case 'ERROR_LOADING_ALL_STOCKS':
             return action.hasErrored;
             
         default:
@@ -36,9 +36,9 @@ export const stocksAreLoading = (state = false, action) => {
 
 export const stocks = (state = [], action) => {
     switch(action.type) {
-        case 'ALL_STOCKS_UPDATED':
+        case 'ALL_STOCKS_DATA':
             return action.stocks;
-            
+
         case 'NEW_STOCK_ADDED':
             return insertStock(state, action.stock);
             

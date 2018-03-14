@@ -9,14 +9,14 @@ export const StockSymbols = (props) => {
             <div className="col-12 col-md-4" key={index}>
                 <div className="card">
                     <div className="card-body" style={{'borderLeft': `${color} solid 5px`}}>
-                        <h5>{stock.name}</h5>
+                        <h5>{stock.symbol}</h5>
                         <button className="btn btn-danger" onClick={props.onClick} id={index}>Remove</button>
                     </div>
                 </div>
             </div>
             );
     });
-    let search =
+    let search = (
                 <form onSubmit={props.onSubmit}>
                     <div className="input-group search">
                         <input type="text" className="form-control" type="text" onChange={props.onChange} value={props.search} />
@@ -24,7 +24,8 @@ export const StockSymbols = (props) => {
                             <button className="btn btn-dark" type="submit">{emoji(" 🔎 ")}</button>
                         </span>
                     </div>
-                </form>;
+                </form>
+                );
     if(props.searchIsLoading) {
         search = <p>Loading...</p>;
     }

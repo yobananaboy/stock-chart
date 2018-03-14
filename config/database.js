@@ -15,6 +15,7 @@ let Schema = mongoose.Schema;
 // create user schema in user collection
 let stocksSchema = new Schema({
    _id: String,
+   symbol: String,
    lastRefresh: Date,
    stocks: []
 }, {collection: 'stocks-to-search'});

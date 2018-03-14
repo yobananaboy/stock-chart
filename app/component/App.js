@@ -4,35 +4,29 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { connect } from 'react-redux';
 import { socketConnect, newStockDataReceived, updateSearchIsLoading } from '../actions/stocks';
+import { getStocks, sayHello } from '../actions/websocket';
 import io from 'socket.io-client';
 
-const socket = io("https://stock-chart-server-render-mattkeegan20.c9users.io//");
+// const socket = io("https://stock-chart-server-render-mattkeegan20.c9users.io/");
+
+
 // const socket = io.connect("https://matts-stock-chart.herokuapp.com/");
 
 
 class App extends Component {
     constructor(props) {
         super(props);
-        
-        //this.props.socketConnect(socket);
-
-        // whenever stock data is emitted, update stocks if there hasn't been an error
-        socket.on('stock-data', data => {
-            this.props.newStockDataReceived(data);
-        });
-
     }
     
     componentDidMount() {
-        this.props.updateSearchIsLoading(false);
-        this.props.socketConnect(socket);
+        this.props.getStocks();
     }
     
     render() {
         return(
             <div className="container">
                 <Header />
-                <Body {...this.props} socket={socket} />
+                <Body {...this.props} />
                 <Footer />
             </div>
         );
@@ -52,7 +46,8 @@ const mapDispatchToProps = (dispatch) => {
     return {
         socketConnect: (socket) => dispatch(socketConnect(socket)),
         newStockDataReceived: (data) => dispatch(newStockDataReceived(data)),
-        updateSearchIsLoading: (bool) => dispatch(updateSearchIsLoading(bool))
+        updateSearchIsLoading: (bool) => dispatch(updateSearchIsLoading(bool)),
+        getStocks: () => dispatch(getStocks()),
     };
 };
 

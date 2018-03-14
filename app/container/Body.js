@@ -38,24 +38,15 @@ class Body extends Component {
     }
     
     render() {
-        let displayStyle = 'block';
-        let stockChart = <StockChart {...this.props} />;
-        if(this.props.isLoading) {
-            displayStyle = 'none';
-            stockChart = <div className="loader">Loading...</div>;
-        }
-        if(this.props.hasErrored) {
-            displayStyle = 'none';
-            stockChart = <p>There was an error loading data. Please try again.</p>;
-        }
-        
+        let stockChart = this.props.stocks.length === 0 ? <div className="loader">Loading...</div> :  <StockChart {...this.props} />;
+        if (this.props.stocksHaveErrored) stockChart = <p>There was an error loading data. Please try again.</p>;
         
         return(
             <div className="row justify-content-center">
                 <div className="col-12 col-md-11 col-lg-10 stock-chart-container">
                     {stockChart}
                 </div>
-                <div className="col-12 col-md-11 col-lg-10 stock-symbol-input-container" style={{'display': displayStyle}}>
+                <div className="col-12 col-md-11 col-lg-10 stock-symbol-input-container">
                     <StockSymbols {...this.props} search={this.state.search} onChange={this.handleChange} onSubmit={this.handleSubmit} onClick={this.handleClick} />
                 </div>
             </div>
