@@ -35,6 +35,10 @@ img {
 .card {
   margin-bottom: 20px; }
 
+.error {
+  color: #ff5252;
+  clear: both; }
+
 .loader {
   border: 16px solid white;
   border-top: 16px solid #ff5252;

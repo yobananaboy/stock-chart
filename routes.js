@@ -19,38 +19,6 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
         return new Date(date.setHours(0, 0, 0, 0));
     };
     
-    const addStockToDb = (stock) => {
-
-        let symbol = stock["Meta Data"]["2. Symbol"];
-        let timeSeries = stock['Time Series (Daily)'];
-        let lastRefresh = stock["Meta Data"]["3. Last Refreshed"];
-        let seriesData = [];
-                        
-        Object.keys(timeSeries).forEach(key => {
-            // parse date, which will be the key
-            let date = Date.parse(new Date(key));
-            // get closing price of stock
-            let close = +timeSeries[key]["4. close"];
-            // push array to stock data at its index
-            seriesData.push([date, close]);
-        });
-        
-        let stockForDb = {
-            _id: symbol,
-            symbol,
-            lastRefresh,
-            data: seriesData.reverse(),
-            tooltip: {
-                valueDecimals: 2
-            }
-        };
-        // upsert stock on database to create new or update existing
-        Stocks.update({_id: symbol}, stockForDb, { upsert: true }).exec()
-            .catch(err => console.log(err));
-        
-        return stockForDb;
-    };
-    
     const getAllStocksData = (socket, broadcast = false) => {
         
             // search database for latest stock symbols searched
@@ -119,9 +87,13 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                         });
                         // emit to user
                         socket.emit('action', { type: 'ALL_STOCKS_DATA', stocks: stocks });
+                        socket.emit('action', { type: 'STOCKS_ARE_LOADING', loading: false });
                         // and broadcast if true
                         broadcast ? socket.broadcast.emit('action', { type: 'ALL_STOCKS_DATA', stocks: stocks }) : void(0);
-                    }).catch(err => console.log(err));
+                    }).catch(err => {
+                        console.log(err);
+                        socket.emit('action', { type: 'ERROR_LOADING_ALL_STOCKS', error: 'Could not load stock data. Please try again.' });
+                    });
             })
             .catch(err => {
                 console.log(err);
@@ -139,35 +111,69 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                 if(search === -1) {
                     let stockSymbol = stockToAdd;
                     let url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${stockSymbol}&apikey=${stockAPIKey}`;
-                    axios.get(url)
+                    axios.get(url, { timeout: 3000 })
                         .then(stock => {
-                            let stockAdded = addStockToDb(stock.data);
+                            stock = stock.data;
+                            let symbol = stock["Meta Data"]["2. Symbol"];
+                            let timeSeries = stock['Time Series (Daily)'];
+                            let lastRefresh = stock["Meta Data"]["3. Last Refreshed"];
+                            let seriesData = [];
+                                            
+                            Object.keys(timeSeries).forEach(key => {
+                                // parse date, which will be the key
+                                let date = Date.parse(new Date(key));
+                                // get closing price of stock
+                                let close = +timeSeries[key]["4. close"];
+                                // push array to stock data at its index
+                                seriesData.push([date, close]);
+                            });
+                            
+                            let newStock = {
+                                _id: symbol,
+                                symbol,
+                                lastRefresh,
+                                data: seriesData.reverse(),
+                                tooltip: {
+                                    valueDecimals: 2
+                                }
+                            };
+                            // upsert stock on database to create new or update existing
+                            Stocks.update({_id: symbol}, newStock, { upsert: true }).exec()
+                                .catch(err => console.log(err));
                             
                             // emit new stock data to all users
-                            socket.emit('action', { type: 'NEW_STOCK_ADDED', stock: stockAdded });
-                            socket.broadcast.emit('action', { type: 'NEW_STOCK_ADDED', stock: stockAdded });
+                            socket.emit('action', { type: 'NEW_STOCK_ADDED', stock: newStock });
+                            socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: false });
+                            
+                            socket.broadcast.emit('action', { type: 'NEW_STOCK_ADDED', stock: newStock });
           
                         })
                         .catch(err => {
                             console.log(err);
-                            // emit error message
+                            socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: 'Search has errored. Please double check that the stock symbol exists and try again.' });
                         });
                     
                 } else {
-                    // else emit message for user
+                    socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: 'This stock has already been added.' });
                 }
             })
-            .catch(err => {
-                console.log(err);
-                // handle error
-            });
-        
+            .catch(err => console.log(err));
         
     };
     
     const deleteStock = (stockToDelete, socket) => {
         Stocks.remove({_id: stockToDelete}).exec()
-            .catch(err => console.log(err));
+            .then(stock => {
+                socket.emit('action', { type: 'STOCK_DELETED', stock: stockToDelete });
+                socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: false });
+                
+                socket.broadcast.emit('action', { type: 'STOCK_DELETED', stock: stockToDelete });
+                
+            })
+            .catch(err => {
+                console.log(err);
+                socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: 'There was an error deleting the stock. Please try again' });
+            });
     };
 
     io.on('connection', (socket) => {
@@ -206,7 +212,6 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
     
     app.get('*', (req, res) => {
        let data = store.getState();
-       store.dispatch(stocksAreLoading(true));
        const content = renderToString(
           <Provider store={store}>
             <App />

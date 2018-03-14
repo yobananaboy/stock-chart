@@ -1,10 +1,8 @@
-import _ from 'underscore';
-
 const insertStock = (array, stock) => {
     let newArray = array.slice();
     newArray.push(stock);
     return newArray;
-}
+};
 
 const deleteStock = (array, stock) => {
     let stockName = stock.symbol;
@@ -12,26 +10,16 @@ const deleteStock = (array, stock) => {
         s.symbol !== stockName;
     });
     return filteredArray;
-}
+};
 
 export const stocksHaveErrored = (state = false, action) => {
     switch(action.type) {
         case 'ERROR_LOADING_ALL_STOCKS':
-            return action.hasErrored;
+            return action.error;
             
         default:
             return state;
     }
-};
-
-export const stocksAreLoading = (state = false, action) => {
-    switch(action.type) {
-        case 'STOCKS_ARE_LOADING':
-            return action.isLoading;
-            
-        default:
-            return state;
-    }  
 };
 
 export const stocks = (state = [], action) => {
@@ -50,10 +38,13 @@ export const stocks = (state = [], action) => {
     }
 };
 
-export const searchIsLoading = (state = false, action) => {
+export const search = (state = {}, action) => {
     switch(action.type) {
-        case 'SEARCH_IS_LOADING':
-            return action.searchIsLoading;
+        case 'STOCK_SEARCH_IS_LOADING':
+            return Object.assign({}, state, { loading: action.loading });
+            
+        case 'STOCK_SEARCH_HAS_ERRORED':
+            return Object.assign({}, state, { error: action.error });
             
         default:
             return state;

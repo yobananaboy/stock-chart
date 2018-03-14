@@ -39,6 +39,11 @@ img {
   margin-bottom: 20px;
 }
 
+.error {
+  color: $red;
+  clear: both;
+}
+
 .loader {
     border: 16px solid white;
     border-top: 16px solid $red;

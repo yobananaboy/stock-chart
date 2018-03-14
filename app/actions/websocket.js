@@ -7,5 +7,5 @@ export const addStock = (stock) => {
 };
 
 export const deleteStock = (stock) => {
-    return { type: 'server/add-stock', stockToDelete: stock };
+    return { type: 'server/delete-stock', stockToDelete: stock };
 };

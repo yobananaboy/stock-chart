@@ -3,15 +3,9 @@ import { Body } from './Body';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { connect } from 'react-redux';
-import { socketConnect, newStockDataReceived, updateSearchIsLoading } from '../actions/stocks';
-import { getStocks, sayHello } from '../actions/websocket';
+import { searchIsLoading, stockSearchHasErrored } from '../actions/stocks';
+import { getStocks, addStock, deleteStock } from '../actions/websocket';
 import io from 'socket.io-client';
-
-// const socket = io("https://stock-chart-server-render-mattkeegan20.c9users.io/");
-
-
-// const socket = io.connect("https://matts-stock-chart.herokuapp.com/");
-
 
 class App extends Component {
     constructor(props) {
@@ -36,18 +30,18 @@ class App extends Component {
 const mapStateToProps = (state) => {
     return {
         stocks: state.stocks,
-        hasErrored: state.stocksHaveErrored,
-        isLoading: state.stocksAreLoading,
-        searchIsLoading: state.searchIsLoading
+        stocksHaveErrored: state.stocksHaveErrored,
+        search: state.search
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        socketConnect: (socket) => dispatch(socketConnect(socket)),
-        newStockDataReceived: (data) => dispatch(newStockDataReceived(data)),
-        updateSearchIsLoading: (bool) => dispatch(updateSearchIsLoading(bool)),
         getStocks: () => dispatch(getStocks()),
+        addStock: (stock) => dispatch(addStock(stock)),
+        deleteStock: (stock) => dispatch(deleteStock(stock)),
+        searchIsLoading: (bool) => dispatch(searchIsLoading(bool)),
+        stockSearchHasErrored: (msg) => dispatch(stockSearchHasErrored(msg))
     };
 };
 

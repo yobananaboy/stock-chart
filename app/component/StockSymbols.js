@@ -8,34 +8,40 @@ class StockSymbols extends Component  {
         super();
         
         this.state = {
-            search: ""
+            stockSearch: ""
         };
         
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleClick = this.handleClick.bind(this);
+        this.deleteStock = this.deleteStock.bind(this);
         
+    }
+    
+    componentDidMount() {
+        this.props.stockSearchHasErrored(false);
     }
     
     handleChange(e) {
         e.preventDefault();
         this.setState({
-            search: e.target.value
+            stockSearch: e.target.value
         });
     }
     
     handleSubmit(e) {
         e.preventDefault();
-        if(this.state.search.length > 1) {
-            this.props.updateSearchIsLoading(true);
-            this.props.socket.emit('new-stock-symbol', {newStockSymbol: this.state.search});    
+        if(this.state.stockSearch.length > 1) {
+            this.setState({
+                stockSearch: ""
+            });
+            this.props.searchIsLoading(true);
+            this.props.addStock(this.state.stockSearch);
+        } else {
+            this.props.stockSearchHasErrored('Please enter a stock to search.');
         }
-        this.setState({
-            search: ""
-        });
     }
     
-    handleClick(e) {
+    deleteStock(e) {
         e.preventDefault();
         this.props.updateSearchIsLoading(true);
         this.props.socket.emit('delete-stock-symbol', {index: +e.target.id});
@@ -49,23 +55,24 @@ class StockSymbols extends Component  {
                     <div className="card">
                         <div className="card-body" style={{'borderLeft': `${color} solid 5px`}}>
                             <h5>{stock.symbol}</h5>
-                            <button className="btn btn-danger" onClick={this.props.onClick} id={index}>Remove</button>
+                            <button className="btn btn-danger" onClick={this.deleteStock} id={index}>Remove</button>
                         </div>
                     </div>
                 </div>
                 );
         });
         let search = (
-                    <form onSubmit={this.props.onSubmit}>
+                    <form onSubmit={this.handleSubmit}>
                         <div className="input-group search">
-                            <input type="text" className="form-control" type="text" onChange={this.props.onChange} value={this.props.search} />
+                            <input type="text" className="form-control" type="text" onChange={this.handleChange} value={this.state.stockSearch} />
                             <span className="input-group-btn">
                                 <button className="btn btn-dark" type="submit">{emoji(" 🔎 ")}</button>
                             </span>
+                            <p className="error">{this.props.search.error}</p>
                         </div>
                     </form>
                     );
-        if(this.props.searchIsLoading) search = <p>Loading...</p>;
+        if(this.props.search.loading) search = <p>Loading...</p>;
         
         return(
             <div className="row">

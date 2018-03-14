@@ -1,21 +1,13 @@
-// connect function for when server side websocket connected with client
-export const stocksAreLoading = (bool) => {
+export const searchIsLoading = (bool) => {
     return {
-        type: 'STOCKS_ARE_LOADING',
-        isLoading: bool
+        type: 'STOCK_SEARCH_IS_LOADING',
+        loading: bool
     };
 };
 
-export const stocksHaveErrored = (bool) => {
+export const stockSearchHasErrored = (msg) => {
     return {
-        type: 'ERROR_LOADING_ALL_STOCKS',
-        hasErrored: bool
-    };
-};
-
-export const updateSearchIsLoading = (bool) => {
-    return {
-        type: 'SEARCH_IS_LOADING',
-        searchIsLoading: bool
+        type: 'STOCK_SEARCH_HAS_ERRORED',
+        error: msg
     };
 };

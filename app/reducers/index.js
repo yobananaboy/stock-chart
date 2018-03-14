@@ -1,9 +1,8 @@
 import { combineReducers } from 'redux';
-import { stocksHaveErrored, stocksAreLoading, searchIsLoading, stocks } from './stocks';
+import { stocksHaveErrored, stocksAreLoading, search, stocks } from './stocks';
 
 export default combineReducers({
    stocksHaveErrored,
-   stocksAreLoading,
-   searchIsLoading,
+   search,
    stocks
 });
