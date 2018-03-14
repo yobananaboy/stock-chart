@@ -35,9 +35,10 @@ img {
 .card {
   margin-bottom: 20px; }
 
-.error {
-  color: #ff5252;
-  margin-left: 1em; }
+.error, .search-error {
+  color: #ff5252; }
+  .error.search-error, .search-error.search-error {
+    margin-left: 1em; }
 
 .loader {
   border: 16px solid white;

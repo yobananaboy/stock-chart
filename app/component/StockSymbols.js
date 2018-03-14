@@ -67,7 +67,7 @@ class StockSymbols extends Component  {
                                 <button className="btn btn-dark" type="submit">{emoji(" 🔎 ")}</button>
                             </span>
                         </div>
-                        <p className="error">{this.props.search.error}</p>
+                        <p className="search-error">{this.props.search.error}</p>
                     </form>
                     );
         if(this.props.search.loading) search = <p>Loading...</p>;

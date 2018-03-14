@@ -8,7 +8,7 @@ export const Body = (props) => {
         
         if(props.stocksAreLoading) stockChart = <div className="loader">Loading...</div>;
         
-        if (props.stocksHaveErrored) stockChart = <p>There was an error loading data. Please try again.</p>;
+        if (props.stocksHaveErrored) stockChart = <p className="error">There was an error loading data. Please try again.</p>;
         
         let stockSymbols;
 

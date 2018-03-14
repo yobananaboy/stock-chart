@@ -39,9 +39,11 @@ img {
   margin-bottom: 20px;
 }
 
-.error {
+.error, .search-error {
   color: $red;
-  margin-left: 1em;
+  &.search-error {
+    margin-left: 1em;
+  }
 }
 
 .loader {
