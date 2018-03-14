@@ -34,7 +34,6 @@ class StockSymbols extends Component  {
             this.setState({
                 stockSearch: ""
             });
-            this.props.searchIsLoading(true);
             this.props.addStock(this.state.stockSearch);
         } else {
             this.props.stockSearchHasErrored('Please enter a stock to search.');
@@ -43,8 +42,7 @@ class StockSymbols extends Component  {
     
     deleteStock(e) {
         e.preventDefault();
-        this.props.updateSearchIsLoading(true);
-        this.props.socket.emit('delete-stock-symbol', {index: +e.target.id});
+        this.props.deleteStock('delete-stock-symbol', {index: +e.target.id});
     }
 
     render () {
@@ -55,7 +53,7 @@ class StockSymbols extends Component  {
                     <div className="card">
                         <div className="card-body" style={{'borderLeft': `${color} solid 5px`}}>
                             <h5>{stock.symbol}</h5>
-                            <button className="btn btn-danger" onClick={this.deleteStock} id={index}>Remove</button>
+                            <button className="btn btn-danger" onClick={this.deleteStock} id={stock.symbol}>Remove</button>
                         </div>
                     </div>
                 </div>

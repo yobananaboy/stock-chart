@@ -3,7 +3,7 @@ import { Body } from './Body';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { connect } from 'react-redux';
-import { searchIsLoading, stockSearchHasErrored } from '../actions/stocks';
+import { stockSearchHasErrored } from '../actions/stocks';
 import { getStocks, addStock, deleteStock } from '../actions/websocket';
 import io from 'socket.io-client';
 
@@ -30,6 +30,7 @@ class App extends Component {
 const mapStateToProps = (state) => {
     return {
         stocks: state.stocks,
+        stocksAreLoading: state.stocksAreLoading,
         stocksHaveErrored: state.stocksHaveErrored,
         search: state.search
     };
@@ -40,7 +41,6 @@ const mapDispatchToProps = (dispatch) => {
         getStocks: () => dispatch(getStocks()),
         addStock: (stock) => dispatch(addStock(stock)),
         deleteStock: (stock) => dispatch(deleteStock(stock)),
-        searchIsLoading: (bool) => dispatch(searchIsLoading(bool)),
         stockSearchHasErrored: (msg) => dispatch(stockSearchHasErrored(msg))
     };
 };

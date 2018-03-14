@@ -20,7 +20,7 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
     };
     
     const getAllStocksData = (socket, broadcast = false) => {
-        
+            socket.emit('action', { type: 'STOCKS_ARE_LOADING', loading: true });
             // search database for latest stock symbols searched
             Stocks.find({}).then(data => {
                 
@@ -92,6 +92,7 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                         broadcast ? socket.broadcast.emit('action', { type: 'ALL_STOCKS_DATA', stocks: stocks }) : void(0);
                     }).catch(err => {
                         console.log(err);
+                        socket.emit('action', { type: 'STOCKS_ARE_LOADING', loading: false });
                         socket.emit('action', { type: 'ERROR_LOADING_ALL_STOCKS', error: 'Could not load stock data. Please try again.' });
                     });
             })
@@ -101,6 +102,7 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
     };
     
     const addStock = (stockToAdd, socket) => {
+        socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: true });
         // search database for stock first, to see if it exists
         Stocks.find({})
             .then(stocks => {
@@ -143,6 +145,7 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                             
                             // emit new stock data to all users
                             socket.emit('action', { type: 'NEW_STOCK_ADDED', stock: newStock });
+                            socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: false });
                             socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: false });
                             
                             socket.broadcast.emit('action', { type: 'NEW_STOCK_ADDED', stock: newStock });
@@ -150,6 +153,7 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
                         })
                         .catch(err => {
                             console.log(err);
+                            socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: false });
                             socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: 'Search has errored. Please double check that the stock symbol exists and try again.' });
                         });
                     
@@ -162,9 +166,11 @@ module.exports = function(app, database, async, _, axios, stockAPIKey, io) {
     };
     
     const deleteStock = (stockToDelete, socket) => {
+        socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: true });
         Stocks.remove({_id: stockToDelete}).exec()
             .then(stock => {
                 socket.emit('action', { type: 'STOCK_DELETED', stock: stockToDelete });
+                socket.emit('action', { type: 'STOCK_SEARCH_IS_LOADING', loading: false });
                 socket.emit('action', { type: 'STOCK_SEARCH_HAS_ERRORED', error: false });
                 
                 socket.broadcast.emit('action', { type: 'STOCK_DELETED', stock: stockToDelete });

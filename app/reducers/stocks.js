@@ -12,6 +12,16 @@ const deleteStock = (array, stock) => {
     return filteredArray;
 };
 
+export const stocksAreLoading = (state = false, action) => {
+    switch(action.type) {
+        case 'STOCKS_ARE_LOADING':
+            return action.loading;
+            
+        default:
+            return state;
+    }
+};
+
 export const stocksHaveErrored = (state = false, action) => {
     switch(action.type) {
         case 'ERROR_LOADING_ALL_STOCKS':
