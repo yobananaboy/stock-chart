@@ -12,7 +12,7 @@ export const Body = (props) => {
         
         let stockSymbols;
 
-        if(!props.stocksHaveErrored) {
+        if(!props.stocksHaveErrored && !props.stocksAreLoading) {
             stockSymbols = (
                 <div className="col-12 col-md-11 col-lg-10 stock-symbol-input-container">
                     <StockSymbols {...props} />
