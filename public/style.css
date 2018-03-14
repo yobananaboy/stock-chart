@@ -37,7 +37,7 @@ img {
 
 .error {
   color: #ff5252;
-  clear: both; }
+  margin-left: 1em; }
 
 .loader {
   border: 16px solid white;
