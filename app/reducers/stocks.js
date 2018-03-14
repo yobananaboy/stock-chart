@@ -5,9 +5,8 @@ const insertStock = (array, stock) => {
 };
 
 const deleteStock = (array, stock) => {
-    let stockName = stock.symbol;
     let filteredArray = array.filter(s => {
-        s.symbol !== stockName;
+        s.symbol !== stock;
     });
     return filteredArray;
 };
