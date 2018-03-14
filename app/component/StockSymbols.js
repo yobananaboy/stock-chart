@@ -34,7 +34,7 @@ class StockSymbols extends Component  {
             this.setState({
                 stockSearch: ""
             });
-            this.props.addStock(this.state.stockSearch);
+            this.props.addStock(this.state.stockSearch.toUpperCase());
         } else {
             this.props.stockSearchHasErrored('Please enter a stock to search.');
         }
