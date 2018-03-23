@@ -4,18 +4,11 @@ require('babel-register')({
 });
 
 const http = require('http');
-const path = require('path');
 require('dotenv').config();
 
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const database = require('./config/database');
-const async = require('async');
-const _ = require('underscore');
-const axios = require('axios');
-
-const stockAPIKey = process.env.ALPHAVANTAGE_KEY;
 
 const server = http.createServer(app);
 const io = require('socket.io').listen(server);
@@ -26,7 +19,7 @@ app.use(bodyParser.json());
 app.set('views', './views');
 app.set('view engine', 'ejs');
 
-require('./routes')(app, database, async, _, axios, stockAPIKey, io);
+require('./server/routes/routes')(app, io);
 
 server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function(){
   var addr = server.address();
